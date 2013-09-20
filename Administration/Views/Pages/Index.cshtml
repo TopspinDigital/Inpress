@@ -1,0 +1,72 @@
+@{
+    ViewBag.Title = "Pages";
+}
+
+<h2>Pages</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+
+<div class="pages"></div>
+
+<div id="dialog-confirm" title="Delete page(s)?">
+    <p><span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 20px 0;"></span>These items will be permanently deleted and cannot be recovered. Are you sure?</p>
+</div>
+
+<script src="~/Scripts/jquery.page-tree.js"></script>
+<script>
+    $(function () {
+        $('.pages').buildTree({ editing: true, selectable: false });
+
+        $("#dialog-confirm").dialog({
+            autoOpen: false,
+            resizable: false,
+            height: 140,
+            modal: true,
+            buttons: {
+                "Delete all items": function () {
+                    deletePage(pageId);
+                    $(this).dialog("close");
+                },
+                Cancel: function () {
+                    $(this).dialog("close");
+                }
+            }
+        });
+
+        $(document).on("click", ".view-page", function () {
+            pageId = $(this).data("id");
+            if (pageId.length > 0) {
+                $("#dialog-confirm").dialog("open");
+            }
+        });
+
+        var pageId;
+        $(document).on("click", ".delete-page", function () {
+            pageId = $(this).data("id");
+            if (pageId.length > 0) {
+                $("#dialog-confirm").dialog("open");
+            }
+        });
+    });
+
+    function deletePage(pageId) {
+        alert(pageId);
+        $.ajax({
+            url: '/Pages/Delete',
+            type: 'POST',
+            dataType: 'text json',
+            contentType: 'application/json; charset=utf-8',
+            data: '{ "id" : "' + pageId + '" }',
+            success: function (o) {
+                if (o.success) {
+                    $("#" + pageId).parent().hide();
+                    $(".main-content").append("The page(s) were deleted.");
+                } else {
+                    $(".main-content").append(o.error);
+                }
+            }
+        });
+    }
+</script>

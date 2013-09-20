@@ -1,0 +1,64 @@
+﻿body                                            { padding-top: 60px; padding-bottom: 40px; }
+#body                                           { position: relative; }
+
+.action-bar                                     { position: absolute; right: 0; padding-top: 30px; padding-right: 10px; }
+.action-bar .widgets                            { list-style: none; padding: 0; }
+
+iframe                                          { width: 100%; height: 100%; border: 0; }
+
+.target                                         { width: 938px; min-height: 100px; border: 1px dotted gray; text-align: center; padding: 10px; margin-bottom: 10px; }
+.target div                                     { width: 100%; border: 1px dotted gray; margin-bottom: 10px; min-height: 30px; }
+.target div:last-child                          { margin: 0; }
+
+.target div:hover                               { background-color: gray; }
+
+
+/* LISTS
+****************************************************************************************************/
+
+ul.tree                                         { list-style: none; padding: 0px; border-right: 1px solid #dddddd; border-bottom: 1px solid #dddddd; border-left: 1px solid #dddddd; margin-top: 4px; margin-bottom: 10px; margin-left: 0; margin-right: 0; }
+ul.tree ul                                      { list-style: none; padding-left: 0; margin: 0; }
+ul.tree li                                      { position: relative; border-top: 1px solid #dddddd; }
+ul.tree li.no-select span.title                 { cursor: auto; }
+
+ul.tree li span.tick                            { background: url(/img/checkbox.png); background-repeat: no-repeat; background-position: 0px 0px; float: left; width: 15px; height: 14px; display: none; margin: 8px 7px; }
+ul.tree li div.item                             { background-color: #ffffff; height: 30px; border: 1px solid #f8f8f8; }
+ul.tree li div.hover                            { background: #dddddd; border: 1px solid #444444 !important; }
+ul.tree li div.active                           { background: #dddddd; border: 1px solid #dddddd; }
+ul.tree li div.child                            { background: #e5e5e5; border: 1px solid #e5e5e5; }
+ul.tree li span                                 { display: table-cell; background-color: transparent; }
+ul.tree li span.arr                             { background-image: url(/img/tree_arr_ex.png); background-repeat: no-repeat; background-position: -5px 4px; }
+ul.tree li span.title                           { height: 25px; padding-top: 5px; display: block; margin-right: 5px; /* margin-right: 80px; */ cursor: pointer; width: auto; }
+ul.tree li span.actions                         { float: right; padding: 2px; display: none; }
+
+span.indent0
+, span.indent1
+, span.indent2
+, span.indent3
+, span.indent4
+, span.indent5                                  { width: 20px; height: 30px; float: left; }
+ul.tree ul span.indent0                         { padding-left: 0px; background-position: -5px 4px; }
+ul.tree ul span.indent1                         { padding-left: 5px; background-position: 0px 4px; }
+ul.tree ul span.indent2                         { padding-left: 10px; background-position: 5px 4px; }
+ul.tree ul span.indent3                         { padding-left: 15px; background-position: 10px 4px; }
+ul.tree ul span.indent4                         { padding-left: 20px; background-position: 15px 4px; }
+ul.tree ul span.indent5                         { padding-left: 25px; background-position: 20px 4px; }
+
+ul.tree span.expanded                           { background-image: url(/img/tree_arr_dwn.png) !important; }
+
+
+/* VALIDATION
+****************************************************************************************************/
+
+.field-validation-error                         { color: #b94a48; }
+.field-validation-valid                         { display: none; }
+input.input-validation-error                    { border: 1px solid #b94a48; }
+input[type="checkbox"].input-validation-error   { border: 0 none; }
+.validation-summary-errors                      { color: #b94a48; }
+.validation-summary-valid                       { display: none; }
+
+
+/* FORM
+****************************************************************************************************/
+
+.no-color                                       { background-color: white; border-style:none; }

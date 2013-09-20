@@ -1,0 +1,179 @@
+﻿@model Inpress.Web.Page
+
+@{
+    ViewBag.Title = "Create a new page";
+}
+
+@section actions {
+    <h3>Drag widgets</h3>
+
+    <ul class="widgets">     
+        <li data-role="header">Header</li>
+        <li data-role="content">Content</li>
+        <li data-role="footer">Footer</li>
+    </ul>
+} 
+
+<h2>Create</h2>
+
+@using (Html.BeginForm("Create", "Pages", FormMethod.Post, new { id = "createPage" })){
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true)
+    @Html.Hidden("ParentId", "homePage");
+
+    <fieldset>
+        <legend>Page</legend>
+    
+        <input type="hidden" id="html" name="html" aria-required="true" />   
+
+        <div class="editor-label">
+            @Html.LabelFor(model => model.Id)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.Id)
+            @Html.ValidationMessageFor(model => model.Id)
+        </div>
+
+        <div id="html-container">  
+            <div class="target" data-role="page"></div>
+        </div>
+
+        <p>
+            <button id="submit">Save</button> <button id="preview">Preview</button>
+        </p>
+    </fieldset>
+}
+
+<div id="dialog-edit">
+    <p>You must specify your html here</p>
+    <textarea id="htmlContent">
+    </textarea>
+</div>
+
+<div id="postHtml" style="display: none;">  
+@if (TempData["html"] != null)
+{
+    @Html.Raw(System.Uri.UnescapeDataString(TempData["html"].ToString()))
+}
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+<script>
+    var $target = $('.target');
+    var $postHtml = $('#postHtml').find('div').first();
+
+    $(function () {
+        init();
+    });
+
+    function init() {
+        if ($postHtml.length > 0) {
+            var target = $postHtml.html();
+            $(target).appendTo($target);
+        }
+
+        $(".widgets li").draggable({
+            appendTo: "body",
+            helper: "clone"
+        });
+
+        $target.droppable({
+            activeClass: "ui-state-default",
+            hoverClass: "ui-state-hover",
+            accept: ":not(.ui-sortable-helper)",
+            drop: function (event, ui) {
+                addToTarget(ui.draggable);
+            }
+        }).sortable({
+            items: "li:not(.placeholder)",
+            sort: function () {
+                // gets added unintentionally by droppable interacting with sortable
+                // using connectWithSortable fixes this, but doesn't allow you to customize active/hoverClass options
+                $(this).removeClass("ui-state-default");
+            }
+        });
+ 
+        $("#dialog-edit").dialog({
+            autoOpen: false,
+            height: 500,
+            width: 800,
+            modal: true,
+            buttons: {
+                "Save": function () {
+                    if (target) {
+                        var textarea = $("#htmlContent");
+                        target.html(textarea.val());
+
+                        $(this).dialog("close");
+                    }
+                },
+                Cancel: function () {
+                    $(this).dialog("close");
+                }
+            },
+            close: function () {
+                $("#htmlContent").val('');
+                target = null;
+            }
+        });
+ 
+        var target;
+        $(".target").on("click", "div", function () {
+            target = $(this);
+
+            $("#htmlContent").val(target.html());
+            $("#dialog-edit").dialog("open");
+        });
+
+        $("#submit").click(function (e) {
+            $("#html").val(generateHtml());
+        });
+
+        $("#preview").click(function (e) {
+            e.preventDefault();
+
+            var validator = $("#createPage").validate();
+            if (validator.form()) {
+                var data = new FormData();
+
+                data.append("html", generateHtml());
+
+                $.ajax({
+                    url: '/Pages/CreatePreview',
+                    type: 'POST',
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                    success: function (o) {
+                        if (o.success) {
+                            window.open(o.path);
+                        } else {
+                            $(".main-content").append(o.error);
+                        }
+                    }
+                });
+            }
+        });
+    };
+
+    function addToTarget($item) {
+        $('<div data-role="' + $item.data("role") + '" />')
+            .text($item.text())
+            .appendTo($target);
+    };
+
+    function generateHtml() {
+        return encodeURIComponent($("#html-container")
+            .clone()
+            .find(".target")
+            .attr("id", $("#Id").val())      
+            .removeClass("target")
+            .removeClass("ui-droppable")
+            .removeClass("ui-sortable")
+            .parent()
+            .html())
+    };
+</script>

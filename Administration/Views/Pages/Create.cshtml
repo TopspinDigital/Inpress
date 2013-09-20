@@ -1,0 +1,238 @@
+@model Inpress.Web.Page
+
+@{
+    ViewBag.Title = "Create";
+}
+
+<h2>Create</h2>
+
+@using (Html.BeginForm()) 
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true)
+
+    <fieldset class="form-horizontal">
+        <legend>Page</legend>
+
+        <div id="startingPanel">            
+            @Html.HiddenFor(model => model.ParentId)
+            <input type="hidden" id="html" name="html" aria-required="true" />
+
+            <div class="control-group">
+                @Html.LabelFor(model => model.Id, new { @class = "control-label" })
+                <div class="controls">
+                    @Html.EditorFor(model => model.Id)
+                    @Html.ValidationMessageFor(model => model.Id, null, new { @class = "help-inline" })
+                </div>
+            </div>
+
+            <div class="control-group">
+                @Html.LabelFor(model => model.ParentId, new { @class = "control-label" })
+                <div class="controls">
+                    <a id="chooseParent" href="#" class="btn btn-default">Choose a parent page</a>
+                    <p class="help-block" id="selectedParent">No parent</p>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Controls</label>
+                <div class="controls">
+                    <ul class="widgets">
+                        <li data-role="header">Header</li>
+                        <li data-role="content">Content</li>
+                        <li data-role="footer">Footer</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div id="html-container" class="controls">
+                    <div class="target" data-role="page"></div>
+                </div>
+            </div>
+
+            <div class="form-actions no-color">
+                <input type="submit" value="Create" class="btn btn-primary" id="submit" />
+                <button id="preview" class="btn">Preview</button>
+            </div>
+        </div>
+
+        <div id="pagePanel" style="display:none;">
+            <div class="pages"></div>
+        </div>
+    </fieldset>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+<div id="dialog-edit">
+    <p>You must specify your html here</p>
+    <textarea id="htmlContent" class="form-control" rows="10" style="width: 760px;"></textarea>
+</div>
+
+<div id="postHtml" style="display: none;">
+    @if (TempData["html"] != null)
+    {
+        @Html.Raw(System.Uri.UnescapeDataString(TempData["html"].ToString()))
+    }
+</div>
+
+<div id="controls">    
+    <div data-role="header"><h2>Header</h2></div>
+    <div data-role="content"><p>You should put your main content in this section.</p></div>
+    <div data-role="footer"><p>A footer should be added if you need extra navigation or other buttons.</p></div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+<script src="~/Scripts/jquery.page-tree.js"></script>
+<script>
+    var $target = $('.target');
+    var $postHtml = $('#postHtml').find('div').first();
+    var $pagePanel = $('#pagePanel'), $startPanel = $('#startingPanel');
+    var pageOptions = {
+        selectChildren: false,
+        multiSelect: false
+    };
+
+    $(function () {
+        init();
+    });
+
+    function init() {
+        if ($postHtml.length > 0) {
+            var target = $postHtml.html();
+            $(target).appendTo($target);
+        }
+
+        $('.pages').buildTree(pageOptions);
+
+        $(".widgets li").draggable({
+            appendTo: "body",
+            helper: "clone"
+        });
+
+        $target.droppable({
+            activeClass: "ui-state-default",
+            hoverClass: "ui-state-hover",
+            accept: ":not(.ui-sortable-helper)",
+            drop: function (event, ui) {
+                addToTarget(ui.draggable);
+            }
+        }).sortable({
+            items: "li:not(.placeholder)",
+            sort: function () {
+                // gets added unintentionally by droppable interacting with sortable
+                // using connectWithSortable fixes this, but doesn't allow you to customize active/hoverClass options
+                $(this).removeClass("ui-state-default");
+            }
+        });
+
+        $("#dialog-edit").dialog({
+            autoOpen: false,
+            height: 500,
+            width: 800,
+            modal: true,
+            buttons: {
+                "Save": function () {
+                    if (target) {
+                        var textarea = $("#htmlContent");
+                        target.html(textarea.val());
+
+                        $(this).dialog("close");
+                    }
+                },
+                Cancel: function () {
+                    $(this).dialog("close");
+                }
+            },
+            close: function () {
+                $("#htmlContent").val('');
+                target = null;
+            }
+        });
+
+        var target;
+        $(document).on("click", ".target div", function () {
+            target = $(this);
+
+            $("#htmlContent").val(target.html());
+            $("#dialog-edit").dialog("open");
+        });
+
+        $("#submit").click(function (e) {
+            $("#html").val(generateHtml());
+        });
+
+        $("#preview").click(function (e) {
+            e.preventDefault();
+
+            var validator = $("form").validate();
+            if (validator.form()) {
+                var data = new FormData();
+
+                data.append("html", generateHtml());
+
+                $.ajax({
+                    url: '/Pages/CreatePreview',
+                    type: 'POST',
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                    success: function (o) {
+                        if (o.success) {
+                            window.open(o.path);
+                        } else {
+                            $(".main-content").append(o.error);
+                        }
+                    }
+                });
+            }
+        });
+
+        $('#chooseParent').click(function (e) {
+            e.preventDefault();
+
+            $startPanel.hide("slide", { direction: "left" }, 500, function () {
+                $pagePanel.effect("slide", { direction: "right" }, 500, null);
+            });
+        });
+
+        $(document).on("click", ".tree .item", function () {
+            var id = $(this).attr("id");
+
+            $("#ParentId").val(id);
+            $("#selectedParent").text(id);
+
+            $pagePanel.hide("slide", { direction: "right" }, 500, function () {
+                $startPanel.effect("slide", { direction: "left" }, 500, null);
+            });
+        });
+    };
+
+    function addToTarget($item) {
+        var role = $item.data("role");
+        var $widget = $('#controls [data-role="' + role + '"]');
+        $widget.appendTo($target);
+    };
+
+    function generateHtml() {
+        return encodeURIComponent($("#html-container")
+            .clone()
+            .find(".target")
+            .attr("id", $("#Id").val())
+            .removeClass("target")
+            .removeClass("ui-droppable")
+            .removeClass("ui-sortable")
+            .parent()
+            .html())
+    };
+</script>
+
+
+
+

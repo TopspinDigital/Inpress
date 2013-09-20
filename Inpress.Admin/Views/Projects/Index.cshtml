@@ -1,0 +1,25 @@
+﻿@model IList<Inpress.Web.Project>
+
+@{
+    ViewBag.Title = "Projects";
+}
+
+<h2>Projects</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var project in Model)
+        {
+            <tr>
+                <td>@project.Name</td>
+                <td><a href="/Projects/Details/@project.Id">View</a> | <a href="/Projects/Edit/@project.Id">Edit</a> | <a href="@project.Id">Delete</a></td>
+            </tr>
+        }
+    </tbody>
+</table>
